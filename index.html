@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisador de Confrontos</title>
+    <style>
+        :root {
+            --bg-color: #fdfaf7;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --accent: #28a745;
+            --sugestao-color: #d32f2f;
+            --brand-color: #ff8c00;
+        }
+        body.dark {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --sugestao-color: #ffeb3b;
+        }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: var(--bg-color); color: var(--text-color); transition: 0.3s; }
+
+        .hidden { display: none !important; }
+
+        #login-container {
+            max-width: 400px; margin: 50px auto;
+            background: #1e1e1e; padding: 30px; border-radius: 20px;
+            color: white; text-align: center;
+            border: 2px solid var(--brand-color);
+        }
+
+        /* Inputs do Login com largura total */
+        #login-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; }
+
+        /* Estilo para inputs gerais (incluindo os de busca que ficaram na mesma linha) */
+        input { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; background: white; }
+        body.dark input { background: #2a2a2a; color: white; border: 1px solid #444; }
+
+        #btn-login {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: var(--brand-color); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        .controls { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+        /* Ajuste: 5 colunas fixas */
+        .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+
+        .card { background: var(--card-bg); padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        select, button { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
+        #sugestao { font-weight: bold; margin-left: 10px; font-size: 14px; color: var(--sugestao-color); }
+        .grid-columns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        @media (max-width: 600px) { .controls { flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } }
+            
+    </style>
+</head>
+<body>
+
+<div id="login-container" style="max-width: 400px; margin: 20px auto; background: #1e1e1e; padding: 20px; border-radius: 20px; color: white; text-align: center; border: 2px solid #ff8c00;">
+    <img src="logo.png" alt="Logo Scanner 8 Minutos" style="width: 300px; margin-bottom: 5px;">
+    <h2 style="margin-top: 5px; margin-bottom: 5px;">Acesse sua conta</h2>
+    <p style="font-size: 0.9em; color: #aaa; margin-top: 0; margin-bottom: 10px;">Entre para acessar todas as funcionalidades</p>
+    <input type="text" id="input-user" placeholder="Email ou usuário" style="padding: 10px; margin: 5px 0;">
+    <input type="password" id="input-pass" placeholder="Senha" style="padding: 10px; margin: 5px 0;">
+    <div style="text-align: left; margin: 5px 0;"><small>Lembrar-me</small></div>
+    <button id="btn-login" onclick="fazerLogin()" style="padding: 10px; margin-top: 5px;">Entrar</button>
+    <p style="margin-top: 10px; font-size: 0.8em; margin-bottom: 0;">Ainda não tem uma conta? <a href="#" style="color: #00bcd4;">Cadastre-se</a></p>
+</div>
+
+<div id="main-content" class="hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Analisador de Confrontos</h2>
+        <button onclick="document.body.classList.toggle('dark')">🌓 Alternar Tema</button>
+    </div>
+
+    <div class="controls">
+        <input list="listaJogadores" id="jogadorA" class="input-jogador" placeholder="Jogador A"> 
+        vs 
+        <input list="listaJogadores" id="jogadorB" class="input-jogador" placeholder="Jogador B">
+        <datalist id="listaJogadores"></datalist>
+
+        <select id="limite">
+            <option value="todos">Todos</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+        </select>
+        <button onclick="analisar()">Analisar Confrontos</button>
+        <span id="sugestao"></span>
+    </div>
+
+    <div id="resultado" class="stats"></div>
+</div>
+
+<!-- Modal Personalizado -->
+<div id="modal-msg" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+    <div style="background: #1e1e1e; padding: 25px; border-radius: 15px; border: 2px solid #ff8c00; color: white; text-align: center; max-width: 300px; width: 90%;">
+        <p id="modal-text" style="font-size: 1.1em; margin-bottom: 20px; color: white !important;"></p>
+        <button onclick="document.getElementById('modal-msg').classList.add('hidden')" style="width: 100%; padding: 10px; border-radius: 10px; border: none; background: #ff8c00; color: #000; font-weight: bold; cursor: pointer;">Fechar</button>
+    </div>
+</div>
+
+<script src="app.js"></script>
+
+<script>
+    const URL = "https://script.google.com/macros/s/AKfycbxUSrwwSQfzj2EodbPSRVjEo67-hcwGBiDMx2PZTsV61MPELNDzvUKusxLfzQg-FEXe-w/exec";
+    let dadosGlobais = [];
+
+    fetch(URL)
+        .then(r => r.json())
+        .then(data => {
+            dadosGlobais = data.confrontos;
+            atualizarJogadores();
+        });
+
+    function atualizarJogadores() {
+        const filtrados = dadosGlobais;
+        const nomes = [...new Set([...filtrados.map(d => d.casa), ...filtrados.map(d => d.visit)])].sort();
+        // Atualização para preencher o datalist
+        document.getElementById('listaJogadores').innerHTML = nomes.map(n => `<option value="${n}">`).join('');
+    }
+
+    function showModal(mensagem) {
+        document.getElementById('modal-text').innerText = mensagem;
+        document.getElementById('modal-msg').classList.remove('hidden');
+    }
+
+    async function fazerLogin() {
+        const btnLogin = document.getElementById('btn-login');
+        const user = document.getElementById('input-user').value;
+        const pass = document.getElementById('input-pass').value;
+        btnLogin.innerText = "VALIDANDO...";
+        
+        const result = await db.call({ action: "login", username: user, password: pass });
+        
+        if (result && result.success) {
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+        } else {
+            showModal("Acesso negado: Usuário ou senha incorretos, ou usuário inativo.");
+        }
+        btnLogin.innerText = "Entrar";
+    }
+
+    function analisar() {
+        const A = document.getElementById('jogadorA').value;
+        const B = document.getElementById('jogadorB').value;
+        const limite = document.getElementById('limite').value;
+        
+        let confrontos = dadosGlobais.filter(d => ((d.casa === A && d.visit === B) || (d.casa === B && d.visit === A)));
+        if (limite !== "todos") confrontos = confrontos.slice(-parseInt(limite));
+        
+        if (confrontos.length === 0) { document.getElementById('resultado').innerHTML = "Nenhum confronto encontrado."; return; }
+
+        let gA = 0, gB = 0, vA = 0, vB = 0, empates = 0, ambasMarcamCount = 0;
+        let totalGols = 0, totalGols1T = 0;
+        let golsSofridosA = 0, golsSofridosB = 0;
+        let counts = { jogo: Array(8).fill(0), jogA: Array(8).fill(0), jogB: Array(8).fill(0), jogo1T: Array(8).fill(0) };
+
+        confrontos.forEach(c => {
+            let golsA = (c.casa === A) ? c.golsCasa : c.golsVisit;
+            let golsB = (c.casa === A) ? c.golsVisit : c.golsCasa;
+            golsSofridosA += (c.casa === A) ? c.golsVisit : c.golsCasa;
+            golsSofridosB += (c.casa === B) ? c.golsVisit : c.golsCasa;
+
+            let gols1T = (c.golsCasa1T || 0) + (c.golsVisit1T || 0);
+            gA += golsA; gB += golsB; totalGols += (golsA + golsB); totalGols1T += gols1T;
+            
+            if (golsA > golsB) vA++; else if (golsB > golsA) vB++; else empates++;
+            if (golsA > 0 && golsB > 0) ambasMarcamCount++;
+            
+            for (let i = 0; i < 8; i++) {
+                if ((golsA + golsB) >= (i + 0.5)) counts.jogo[i]++;
+                if (gols1T >= (i + 0.5)) counts.jogo1T[i]++;
+                if (golsA >= (i + 0.5)) counts.jogA[i]++;
+                if (golsB >= (i + 0.5)) counts.jogB[i]++;
+            }
+        });
+
+        const total = confrontos.length;
+        const mediaGols = totalGols / total;
+        let sugestaoOver = Math.max(0.5, mediaGols - 2).toFixed(1); 
+        document.getElementById('sugestao').innerText = "Sugestão: Over " + sugestaoOver + " Gols na partida";
+
+        const renderBar = (count, total, label) => {
+            const val = total > 0 ? (count / total) * 100 : 0;
+            const p = val.toFixed(0);
+            const barColor = val >= 80 ? '#28a745' : (val >= 70 ? '#ffc107' : '#dc3545');
+
+            return `<div style="display:flex; align-items:center; gap:8px; margin: 3px 0; font-size:11px;">
+                        <span style="min-width:55px;">${label}</span>
+                        <div style="background:#444; height:10px; width:100%; border-radius:5px;"><div style="background:${barColor}; height:100%; width:${p}%;"></div></div>
+                        <span style="min-width:30px; text-align:right;">${p}%</span>
+                    </div>`;
+        };
+
+        document.getElementById('resultado').innerHTML = `
+            <div class="card">Total: <b>${total}</b></div>
+            ${renderCardSimple(`Vitórias ${A}`, vA, total, '#28a745')}
+            ${renderCardSimple(`Vitórias ${B}`, vB, total, '#28a745')}
+            ${renderCardSimple('Empates', empates, total, '#ffc107')}
+            ${renderCardSimple('Ambas', ambasMarcamCount, total, '#28a745')}
+            <div class="card">Média Gols: <b>${(totalGols / total).toFixed(2)}</b></div>
+            <div class="card">Média 1º Tempo: <b>${(totalGols1T / total).toFixed(2)}</b></div>
+            <div class="card">Média Gols ${A}: <b>${(gA / total).toFixed(2)}</b></div>
+            <div class="card">Média Gols ${B}: <b>${(gB / total).toFixed(2)}</b></div>
+            <div class="card">Gols Feitos ${A}: <b>${gA}</b></div>
+            <div class="card">Sofridos ${A}: <b>${golsSofridosA}</b></div>
+            <div class="card">Gols Feitos ${B}: <b>${gB}</b></div>            
+            <div class="card">Sofridos ${B}: <b>${golsSofridosB}</b></div>
+            
+            <div class="card grid-columns" style="grid-column: 1 / -1;">
+                <div><h3>GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
+                <div><h3>GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
+                <div><h3>JOGADOR ${A}</h3>${counts.jogA.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
+                <div><h3>JOGADOR ${B}</h3>${counts.jogB.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
+            </div>
+        `;
+    }
+
+    function renderCardSimple(label, count, total, color) {
+        const p = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
+        return `
+            <div class="card">
+                <div>${label}: <b>${count}</b></div>
+                <div style="font-weight:bold; text-align: center;">${p}%</div>
+                <div style="background:#444; height:6px; width:100%; border-radius:3px;">
+                    <div style="background:${color}; height:100%; width:${p}%; border-radius:3px;"></div>
+                </div>
+            </div>`;
+    }
+</script>
+</body>
+</html>
