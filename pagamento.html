@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner 8 Minutos - Pagamento</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --container-bg: #1a1a1a;
+            --input-bg: #2a2a2a;
+            --text-color: #ffffff;
+            --accent-green: #6d9c00; /* Cor do botão ativado */
+            --disabled-color: #444444;
+            --brand-orange: #ff8c00; /* Cor da borda laranja */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .payment-card {
+            background-color: var(--container-bg);
+            padding: 25px; /* Reduzido de 40px */
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid var(--brand-orange); /* Borda laranja adicionada */
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #b0e500;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle { font-size: 14px; color: #888; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;}
+
+        h2 { margin-bottom: 5px; margin-top: 0px; }
+        .price { color: #ff8c00; font-size: 1.2em; margin-bottom: 10px; } /* Reduzido de 25px */
+
+        .form-group { text-align: left; margin-bottom: 10px; } /* Reduzido de 15px */
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #ccc; }
+        
+        input {
+            width: 100%;
+            padding: 10px; /* Reduzido de 12px */
+            background-color: var(--input-bg);
+            border: 1px solid var(--brand-orange); /* Borda laranja adicionada */
+            border-radius: 8px;
+            color: white;
+            box-sizing: border-box; 
+        }
+
+        input:focus { outline: 1px solid var(--accent-green); }
+
+        #btn-pagar {
+            width: 100%;
+            padding: 12px; /* Reduzido de 15px */
+            background-color: var(--disabled-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: not-allowed;
+            margin-top: 10px; /* Reduzido de 20px */
+            transition: 0.3s;
+        }
+
+        #btn-pagar.active {
+            background-color: var(--accent-green);
+            cursor: pointer;
+        }
+
+        .security-footer {
+            margin-top: 15px; /* Reduzido de 20px */
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .logo-imagem {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto 0px auto; /* Reduzi a margem inferior para 0 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <img src="logo.png" alt="Scanner 8 Minutos" class="logo-imagem">
+
+    <h2>Assinatura</h2>
+    <div class="price">Plano Mensal — <b>R$ 39,90</b> / 30 dias</div>
+
+    <form id="paymentForm">
+        <div class="form-group">
+            <label>Nome Completo</label>
+            <input type="text" id="nome" placeholder="Seu nome completo" required>
+        </div>
+
+        <div class="form-group">
+            <label>CPF</label>
+            <input type="text" id="cpf" placeholder="000.000.000-00" required>
+        </div>
+
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="seu@email.com" required>
+        </div>
+        <div class="form-group">
+            <label>Telefone / WhatsApp</label>
+            <input type="tel" id="telefone" placeholder="(11) 99999-9999" required>
+        </div>
+        
+
+        <button type="button" id="btn-pagar" disabled onclick="realizarPagamento()">Pagar via Mercado Pago</button>
+    </form>
+
+    <div class="security-footer">
+        🔒 Pagamento 100% seguro via Mercado Pago — PIX ou Cartão
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('paymentForm');
+    const inputs = form.querySelectorAll('input');
+    const btnPagar = document.getElementById('btn-pagar');
+
+    // Função que verifica se todos os campos estão preenchidos
+    function validateForm() {
+        let allFilled = true;
+        inputs.forEach(input => {
+            if (input.value.trim() === '') {
+                allFilled = false;
+            }
+        });
+
+        if (allFilled) {
+            btnPagar.disabled = false;
+            btnPagar.classList.add('active');
+        } else {
+            btnPagar.disabled = true;
+            btnPagar.classList.remove('active');
+        }
+    }
+
+    // Função de redirecionamento
+    // Função de redirecionamento com salvamento de dados
+    async function realizarPagamento() {
+        if (btnPagar.disabled) return;
+
+        // Mostra um estado de carregamento no botão
+        btnPagar.innerText = "Processando...";
+        btnPagar.disabled = true;
+
+        // 1. Coleta os dados
+        const dadosPagamento = {
+            action: "salvar_pagamento",
+            nome: document.getElementById('nome').value,
+            cpf: document.getElementById('cpf').value,
+            email: document.getElementById('email').value,
+            telefone: document.getElementById('telefone').value
+        };
+
+        // 2. Envia para o Google Apps Script
+        try {
+            await fetch("https://script.google.com/macros/s/AKfycbz332MSjpOJtmordqetu-vBMX2xivAaVRoanK6YFZ2bWrHS-KhlipkbSq8c_WMFq2mPaw/exec", {
+                method: "POST",
+                mode: 'no-cors', // Importante para evitar erro de CORS
+                body: JSON.stringify(dadosPagamento)
+            });
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+        }
+
+        // 3. Redireciona para o Mercado Pago
+        window.location.href = "https://mpago.la/1gath2F";
+    }
+
+    // Adiciona evento para verificar a cada digitação
+    inputs.forEach(input => {
+        input.addEventListener('input', validateForm);
+    });
+</script>
+
+</body>
+</html>
