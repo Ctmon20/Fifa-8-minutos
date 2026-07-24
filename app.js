@@ -1,4 +1,4 @@
-const URL_API_SCANNER = "https://script.google.com/macros/s/AKfycbxUSrwwSQfzj2EodbPSRVjEo67-hcwGBiDMx2PZTsV61MPELNDzvUKusxLfzQg-FEXe-w/exec";
+const URL_API_SCANNER = "https://script.google.com/macros/s/AKfycbz332MSjpOJtmordqetu-vBMX2xivAaVRoanK6YFZ2bWrHS-KhlipkbSq8c_WMFq2mPaw/exec";
 
 const db = {
     call: async (payload) => {
