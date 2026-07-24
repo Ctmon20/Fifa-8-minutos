@@ -221,11 +221,15 @@
         const total = confrontos.length;
         const mediaGols = totalGols / total;
         let sugestaoOver = Math.max(0.5, mediaGols - 2).toFixed(1); 
-        document.getElementById('sugestao').innerText = "Sugestão: Over " + sugestaoOver + " Gols na partida";
+        if (isVip) {
+            document.getElementById('sugestao').innerHTML = "Sugestão: Over " + sugestaoOver + " Gols na partida";
+        } else {
+            document.getElementById('sugestao').innerHTML = '<a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank" style="padding: 5px 10px; display: inline-block;">🔒 SUGESTÃO VIP</a>';
+        }
 
         const renderBar = (count, total, label, i) => {
             // Só bloqueia se i >= 1 E NÃO for VIP
-            if (i >= 1 && !isVip) {
+            if (i >= 2 && !isVip) {
                 return `<a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank">🔒 APENAS VIP</a>`;
             }
             const val = total > 0 ? (count / total) * 100 : 0;
@@ -245,8 +249,10 @@
             ${renderCardSimple(`Vitórias ${B}`, vB, total, '#28a745')}
             ${renderCardSimple('Empates', empates, total, '#ffc107')}
             ${renderCardSimple('Ambas', ambasMarcamCount, total, '#28a745')}
-            ${renderCardSimple('Ambas 1T', ambasMarcam1TCount, total, '#28a745')}
+            
+            ${renderVipProgress('Ambas 1º Tempo', ambasMarcam1TCount, total, '#28a745')}
 
+            
             ${renderVipStat('Média Gols', (totalGols / total).toFixed(2))}
             ${renderVipStat('Média 1º Tempo', (totalGols1T / total).toFixed(2))}
             ${renderVipStat('Média Gols ' + A, (gA / total).toFixed(2))}
@@ -281,6 +287,30 @@
         if (isVip) {
             return `<div class="card">${label}: <b>${value}</b></div>`;
         } else {
+            return `
+                <div class="card">
+                    <div style="margin-bottom:5px; font-size:12px;">${label}</div>
+                    <a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">
+                        🔒 APENAS VIP
+                    </a>
+                </div>`;
+        }
+    }
+
+    function renderVipProgress(label, count, total, color) {
+        if (isVip) {
+            // Se for VIP, desenha a barra completa
+            const p = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
+            return `
+            <div class="card">
+                <div>${label}: <b>${count}</b></div>
+                <div style="font-weight:bold; text-align: center;">${p}%</div>
+                <div style="background:#444; height:6px; width:100%; border-radius:3px;">
+                    <div style="background:${color}; height:100%; width:${p}%; border-radius:3px;"></div>
+                </div>
+            </div>`;
+        } else {
+            // Se não for VIP, mostra o bloqueio
             return `
                 <div class="card">
                     <div style="margin-bottom:5px; font-size:12px;">${label}</div>
