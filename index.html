@@ -30,10 +30,8 @@
             border: 2px solid var(--brand-color);
         }
 
-        /* Inputs do Login com largura total */
         #login-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; }
 
-        /* Estilo para inputs gerais (incluindo os de busca que ficaram na mesma linha) */
         input { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; background: white; }
         body.dark input { background: #2a2a2a; color: white; border: 1px solid #444; }
 
@@ -43,7 +41,6 @@
         }
         .controls { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-        /* Ajuste: 5 colunas fixas */
         .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
 
         .card { background: var(--card-bg); padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
@@ -51,6 +48,10 @@
         button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
         #sugestao { font-weight: bold; margin-left: 10px; font-size: 14px; color: var(--sugestao-color); }
         .grid-columns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        /* Implementação do botão VIP */
+        .btn-vip { background: #0056b3; color: white; border-radius: 5px; text-align: center; cursor: pointer; font-weight: bold; border: none; display: block; margin: 2px 0; padding: 4px; font-size: 11px; text-decoration: none; }
+        
         @media (max-width: 600px) { .controls { flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } }
             
     </style>
@@ -104,20 +105,18 @@
 <script src="app.js"></script>
 
 <script>
-    const URL = "https://script.google.com/macros/s/AKfycbxUSrwwSQfzj2EodbPSRVjEo67-hcwGBiDMx2PZTsV61MPELNDzvUKusxLfzQg-FEXe-w/exec";
+    const URL = "https://script.google.com/macros/s/AKfycbwDqVI9L22TjrcPvtq5fUZHiW5XnDEUTqI7fXX09ogZU-FfOOtLTGKtf_iN058mNaKOpA/exec";
     let dadosGlobais = [];
-    let isCarregando = true; // Flag para saber se ainda estamos buscando dados
-    let loadingElement = null; // Referência ao aviso
+    let isCarregando = true;
+    let loadingElement = null;
+    let isVip = false; // Variável global para controle de permissão
 
-    // Inicia o fetch imediatamente em segundo plano
     fetch(URL)
         .then(r => r.json())
         .then(data => {
             dadosGlobais = data.confrontos;
             atualizarJogadores();
             isCarregando = false;
-            
-            // Se o aviso existir, removemos ele agora que terminou
             if (loadingElement) {
                 document.body.removeChild(loadingElement);
                 loadingElement = null;
@@ -147,11 +146,16 @@
         const user = document.getElementById('input-user').value;
         const pass = document.getElementById('input-pass').value;
         btnLogin.innerText = "VALIDANDO...";
-        
+
         const result = await db.call({ action: "login", username: user, password: pass });
-        
+
         if (result && result.success) {
-            // Se os dados ainda estiverem carregando, mostramos o aviso aqui
+            // Agora verificamos o campo 'tipo' vindo do seu AppScript
+            const tipoConta = result.tipo ? result.tipo.toString().trim().toLowerCase() : "gratuito";
+
+            // Se for "assinante", liberamos o VIP (isVip = true)
+            isVip = (tipoConta === "assinante");
+
             if (isCarregando) {
                 loadingElement = document.createElement('div');
                 loadingElement.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; padding: 20px; border-radius: 15px; color: white; border: 2px solid #ff8c00; z-index: 10000; text-align: center; font-weight: bold;";
@@ -168,7 +172,8 @@
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
         } else {
-            showModal("Acesso negado: Usuário ou senha incorretos, ou usuário inativo.");
+            // Exibe a mensagem de erro que vem do seu Apps Script (ex: "Seu acesso está inativo...")
+            showModal(result.message || "Acesso negado: Usuário ou senha incorretos.");
         }
         btnLogin.innerText = "Entrar";
     }
@@ -192,10 +197,8 @@
             let golsA = (c.casa === A) ? c.golsCasa : c.golsVisit;
             let golsB = (c.casa === A) ? c.golsVisit : c.golsCasa;
             
-            // --- AJUSTE AQUI: Definindo as variáveis que faltavam ---
             let golsA1T = (c.casa === A) ? (c.golsCasa1T || 0) : (c.golsVisit1T || 0);
             let golsB1T = (c.casa === A) ? (c.golsVisit1T || 0) : (c.golsCasa1T || 0);
-            // --------------------------------------------------------
 
             golsSofridosA += (c.casa === A) ? c.golsVisit : c.golsCasa;
             golsSofridosB += (c.casa === B) ? c.golsVisit : c.golsCasa;
@@ -220,7 +223,11 @@
         let sugestaoOver = Math.max(0.5, mediaGols - 2).toFixed(1); 
         document.getElementById('sugestao').innerText = "Sugestão: Over " + sugestaoOver + " Gols na partida";
 
-        const renderBar = (count, total, label) => {
+        const renderBar = (count, total, label, i) => {
+            // Só bloqueia se i >= 1 E NÃO for VIP
+            if (i >= 1 && !isVip) {
+                return `<a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank">🔒 APENAS VIP</a>`;
+            }
             const val = total > 0 ? (count / total) * 100 : 0;
             const p = val.toFixed(0);
             const barColor = val >= 80 ? '#28a745' : (val >= 70 ? '#ffc107' : '#dc3545');
@@ -239,20 +246,21 @@
             ${renderCardSimple('Empates', empates, total, '#ffc107')}
             ${renderCardSimple('Ambas', ambasMarcamCount, total, '#28a745')}
             ${renderCardSimple('Ambas 1T', ambasMarcam1TCount, total, '#28a745')}
-            <div class="card">Média Gols: <b>${(totalGols / total).toFixed(2)}</b></div>
-            <div class="card">Média 1º Tempo: <b>${(totalGols1T / total).toFixed(2)}</b></div>
-            <div class="card">Média Gols ${A}: <b>${(gA / total).toFixed(2)}</b></div>
-            <div class="card">Média Gols ${B}: <b>${(gB / total).toFixed(2)}</b></div>
-            <div class="card">Gols Feitos ${A}: <b>${gA}</b></div>
-            <div class="card">Sofridos ${A}: <b>${golsSofridosA}</b></div>
-            <div class="card">Gols Feitos ${B}: <b>${gB}</b></div>            
-            <div class="card">Sofridos ${B}: <b>${golsSofridosB}</b></div>
+
+            ${renderVipStat('Média Gols', (totalGols / total).toFixed(2))}
+            ${renderVipStat('Média 1º Tempo', (totalGols1T / total).toFixed(2))}
+            ${renderVipStat('Média Gols ' + A, (gA / total).toFixed(2))}
+            ${renderVipStat('Média Gols ' + B, (gB / total).toFixed(2))}
+            ${renderVipStat('Gols Feitos ' + A, gA)}
+            ${renderVipStat('Sofridos ' + A, golsSofridosA)}
+            ${renderVipStat('Gols Feitos ' + B, gB)}
+            ${renderVipStat('Sofridos ' + B, golsSofridosB)}
             
             <div class="card grid-columns" style="grid-column: 1 / -1;">
-                <div><h3>GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
-                <div><h3>GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
-                <div><h3>JOGADOR ${A}</h3>${counts.jogA.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
-                <div><h3>JOGADOR ${B}</h3>${counts.jogB.map((c, i) => renderBar(c, total, (i+0.5)+' Gols')).join('')}</div>
+                <div><h3>GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
+                <div><h3>GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
+                <div><h3>JOGADOR ${A}</h3>${counts.jogA.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
+                <div><h3>JOGADOR ${B}</h3>${counts.jogB.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
             </div>
         `;
     }
@@ -268,6 +276,21 @@
                 </div>
             </div>`;
     }
+
+    function renderVipStat(label, value) {
+        if (isVip) {
+            return `<div class="card">${label}: <b>${value}</b></div>`;
+        } else {
+            return `
+                <div class="card">
+                    <div style="margin-bottom:5px; font-size:12px;">${label}</div>
+                    <a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">
+                        🔒 APENAS VIP
+                    </a>
+                </div>`;
+        }
+    }
+
 </script>
 </body>
 </html>
