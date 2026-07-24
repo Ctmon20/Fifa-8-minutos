@@ -23,19 +23,19 @@
 
         .hidden { display: none !important; }
 
-        #login-container {
+        #login-container, #cadastro-container {
             max-width: 400px; margin: 50px auto;
             background: #1e1e1e; padding: 30px; border-radius: 20px;
             color: white; text-align: center;
             border: 2px solid var(--brand-color);
         }
 
-        #login-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; }
+        #login-container input, #cadastro-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; }
 
         input { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; background: white; }
         body.dark input { background: #2a2a2a; color: white; border: 1px solid #444; }
 
-        #btn-login {
+        #btn-login, #btn-cadastrar {
             width: 100%; padding: 12px; border-radius: 10px; border: none;
             background: var(--brand-color); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
@@ -49,24 +49,31 @@
         #sugestao { font-weight: bold; margin-left: 10px; font-size: 14px; color: var(--sugestao-color); }
         .grid-columns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         
-        /* Implementação do botão VIP */
         .btn-vip { background: #0056b3; color: white; border-radius: 5px; text-align: center; cursor: pointer; font-weight: bold; border: none; display: block; margin: 2px 0; padding: 4px; font-size: 11px; text-decoration: none; }
         
         @media (max-width: 600px) { .controls { flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } }
-            
     </style>
 </head>
 <body>
 
-<div id="login-container" style="max-width: 400px; margin: 20px auto; background: #1e1e1e; padding: 20px; border-radius: 20px; color: white; text-align: center; border: 2px solid #ff8c00;">
+<div id="login-container">
     <img src="logo.png" alt="Logo Scanner 8 Minutos" style="width: 300px; margin-bottom: 5px;">
     <h2 style="margin-top: 5px; margin-bottom: 5px;">Acesse sua conta</h2>
     <p style="font-size: 0.9em; color: #aaa; margin-top: 0; margin-bottom: 10px;">Entre para acessar todas as funcionalidades</p>
-    <input type="text" id="input-user" placeholder="Email ou usuário" style="padding: 10px; margin: 5px 0;">
-    <input type="password" id="input-pass" placeholder="Senha" style="padding: 10px; margin: 5px 0;">
+    <input type="text" id="input-user" placeholder="Email ou usuário">
+    <input type="password" id="input-pass" placeholder="Senha">
     <div style="text-align: left; margin: 5px 0;"><small>Lembrar-me</small></div>
-    <button id="btn-login" onclick="fazerLogin()" style="padding: 10px; margin-top: 5px;">Entrar</button>
-    <p style="margin-top: 10px; font-size: 0.8em; margin-bottom: 0;">Ainda não tem uma conta? <a href="#" style="color: #00bcd4;">Cadastre-se</a></p>
+    <button id="btn-login" onclick="fazerLogin()">Entrar</button>
+    <p style="margin-top: 10px; font-size: 0.8em; margin-bottom: 0;">Ainda não tem uma conta? <a href="#" onclick="event.preventDefault(); document.getElementById('login-container').classList.add('hidden'); document.getElementById('cadastro-container').classList.remove('hidden');" style="color: #00bcd4;">Cadastre-se</a></p>
+</div>
+
+<div id="cadastro-container" class="hidden">
+    <h2 style="margin-top: 5px;">Criar Conta</h2>
+    <p style="font-size: 0.9em; color: #aaa;">Preencha para solicitar acesso</p>
+    <input type="text" id="cad-email" placeholder="Email ou usuário">
+    <input type="password" id="cad-pass" placeholder="Senha (máx 8 dígitos)" maxlength="8">
+    <button id="btn-cadastrar" onclick="cadastrarUsuario()">Criar Conta</button>
+    <p style="margin-top: 10px; font-size: 0.8em;"><a href="#" onclick="event.preventDefault(); document.getElementById('cadastro-container').classList.add('hidden'); document.getElementById('login-container').classList.remove('hidden');" style="color: #00bcd4;">Voltar para o Login</a></p>
 </div>
 
 <div id="main-content" class="hidden">
@@ -86,6 +93,7 @@
             <option value="10">10</option>
             <option value="20">20</option>
             <option value="50">50</option>
+            <option value="60">60</option>
         </select>
         <button onclick="analisar()">Analisar Confrontos</button>
         <span id="sugestao"></span>
@@ -94,7 +102,6 @@
     <div id="resultado" class="stats"></div>
 </div>
 
-<!-- Modal Personalizado -->
 <div id="modal-msg" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div style="background: #1e1e1e; padding: 25px; border-radius: 15px; border: 2px solid #ff8c00; color: white; text-align: center; max-width: 300px; width: 90%;">
         <p id="modal-text" style="font-size: 1.1em; margin-bottom: 20px; color: white !important;"></p>
@@ -105,18 +112,20 @@
 <script src="app.js"></script>
 
 <script>
-    const URL = "https://script.google.com/macros/s/AKfycbwDqVI9L22TjrcPvtq5fUZHiW5XnDEUTqI7fXX09ogZU-FfOOtLTGKtf_iN058mNaKOpA/exec";
+    const URL = "https://script.google.com/macros/s/AKfycbz332MSjpOJtmordqetu-vBMX2xivAaVRoanK6YFZ2bWrHS-KhlipkbSq8c_WMFq2mPaw/exec";
     let dadosGlobais = [];
     let isCarregando = true;
     let loadingElement = null;
-    let isVip = false; // Variável global para controle de permissão
+    let isVip = false;
 
+    // Inicia o fetch imediatamente em segundo plano
     fetch(URL)
         .then(r => r.json())
         .then(data => {
             dadosGlobais = data.confrontos;
             atualizarJogadores();
             isCarregando = false;
+            
             if (loadingElement) {
                 document.body.removeChild(loadingElement);
                 loadingElement = null;
@@ -146,16 +155,10 @@
         const user = document.getElementById('input-user').value;
         const pass = document.getElementById('input-pass').value;
         btnLogin.innerText = "VALIDANDO...";
-
+        
         const result = await db.call({ action: "login", username: user, password: pass });
-
+        
         if (result && result.success) {
-            // Agora verificamos o campo 'tipo' vindo do seu AppScript
-            const tipoConta = result.tipo ? result.tipo.toString().trim().toLowerCase() : "gratuito";
-
-            // Se for "assinante", liberamos o VIP (isVip = true)
-            isVip = (tipoConta === "assinante");
-
             if (isCarregando) {
                 loadingElement = document.createElement('div');
                 loadingElement.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; padding: 20px; border-radius: 15px; color: white; border: 2px solid #ff8c00; z-index: 10000; text-align: center; font-weight: bold;";
@@ -168,14 +171,39 @@
                 `;
                 document.body.appendChild(loadingElement);
             }
-
+            
+            isVip = (result.tipo === "assinante");
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
         } else {
-            // Exibe a mensagem de erro que vem do seu Apps Script (ex: "Seu acesso está inativo...")
             showModal(result.message || "Acesso negado: Usuário ou senha incorretos.");
         }
         btnLogin.innerText = "Entrar";
+    }
+
+    async function cadastrarUsuario() {
+        const btn = document.getElementById('btn-cadastrar');
+        const user = document.getElementById('cad-email').value;
+        const pass = document.getElementById('cad-pass').value;
+
+        if (!user || !pass) { alert("Preencha todos os campos."); return; }
+        if (pass.length > 8) { alert("A senha deve ter no máximo 8 dígitos."); return; }
+
+        btn.innerText = "Cadastrando...";
+        
+        try {
+            const response = await fetch(URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "cadastrar", username: user, password: pass, status: "Ativo" })
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (result.success) {
+                document.getElementById('cadastro-container').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
+            }
+        } catch (err) { alert("Erro ao cadastrar."); }
+        btn.innerText = "Criar Conta";
     }
 
     function analisar() {
@@ -196,20 +224,15 @@
         confrontos.forEach(c => {
             let golsA = (c.casa === A) ? c.golsCasa : c.golsVisit;
             let golsB = (c.casa === A) ? c.golsVisit : c.golsCasa;
-            
             let golsA1T = (c.casa === A) ? (c.golsCasa1T || 0) : (c.golsVisit1T || 0);
             let golsB1T = (c.casa === A) ? (c.golsVisit1T || 0) : (c.golsCasa1T || 0);
-
             golsSofridosA += (c.casa === A) ? c.golsVisit : c.golsCasa;
             golsSofridosB += (c.casa === B) ? c.golsVisit : c.golsCasa;
-
             let gols1T = (c.golsCasa1T || 0) + (c.golsVisit1T || 0);
             gA += golsA; gB += golsB; totalGols += (golsA + golsB); totalGols1T += gols1T;
-            
             if (golsA > golsB) vA++; else if (golsB > golsA) vB++; else empates++;
             if (golsA > 0 && golsB > 0) ambasMarcamCount++;
             if (golsA1T > 0 && golsB1T > 0) ambasMarcam1TCount++; 
-            
             for (let i = 0; i < 8; i++) {
                 if ((golsA + golsB) >= (i + 0.5)) counts.jogo[i]++;
                 if (gols1T >= (i + 0.5)) counts.jogo1T[i]++;
@@ -221,24 +244,44 @@
         const total = confrontos.length;
         const mediaGols = totalGols / total;
         let sugestaoOver = Math.max(0.5, mediaGols - 2).toFixed(1); 
+        
         if (isVip) {
-            document.getElementById('sugestao').innerHTML = "Sugestão: Over " + sugestaoOver + " Gols na partida";
+            const val = parseFloat(sugestaoOver);
+            let mensagens = [];
+
+            if (val >= 3.0) {
+                // Jogo com muitos gols = Jogo muito movimentado/aberto
+                mensagens = [
+                    `Análise avançada: O histórico mostra um confronto extremamente aberto. Sugestão: Over ${sugestaoOver} gols.`,
+                    `Jogo de alta intensidade detectado! Ambos os jogadores buscam o gol constantemente. Sugestão: Over ${sugestaoOver} gols.`,
+                    `Projeção de jogo muito movimentado. O sistema aponta um placar dilatado com Over ${sugestaoOver} gols.`,
+                    `Fluxo ofensivo alto identificado. A tendência é de uma partida com muitos gols: Over ${sugestaoOver}.`,
+                    `Dados de alta rotatividade: Confronto propício para um jogo aberto com Over ${sugestaoOver} gols.`
+                ];
+            } else {
+                // Jogo com poucos gols = Jogo estudado/retrancado
+                mensagens = [
+                    `Análise estratégica: Confronto com características mais estudadas e retrancadas. Sugestão: Over ${sugestaoOver} gols.`,
+                    `Jogo de cautela detectado. O histórico indica uma partida mais contida. Sugestão: Over ${sugestaoOver} gols.`,
+                    `Projeção de um confronto tático e de baixo placar. Sugestão de mercado: Over ${sugestaoOver} gols.`,
+                    `Dados de eficiência baixa: O sistema aponta um jogo mais travado e defensivo com Over ${sugestaoOver}.`,
+                    `Padrão de jogo contido identificado. A tendência é de um confronto equilibrado e menos gols: Over ${sugestaoOver}.`
+                ];
+            }
+            
+            const msgAleatoria = mensagens[Math.floor(Math.random() * mensagens.length)];
+            document.getElementById('sugestao').innerHTML = msgAleatoria;
         } else {
-            document.getElementById('sugestao').innerHTML = '<a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank" style="padding: 5px 10px; display: inline-block;">🔒 SUGESTÃO VIP</a>';
+            document.getElementById('sugestao').innerHTML = '<a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px 10px; display: inline-block;">🔒 SUGESTÃO VIP</a>';
         }
 
         const renderBar = (count, total, label, i) => {
-            // Só bloqueia se i >= 1 E NÃO for VIP
-            if (i >= 2 && !isVip) {
-                return `<a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank">🔒 APENAS VIP</a>`;
-            }
+            if (i >= 2 && !isVip) return `<a href="pagamento.html" class="btn-vip" target="_blank">🔒 APENAS VIP</a>`;
             const val = total > 0 ? (count / total) * 100 : 0;
             const p = val.toFixed(0);
-            const barColor = val >= 80 ? '#28a745' : (val >= 70 ? '#ffc107' : '#dc3545');
-
             return `<div style="display:flex; align-items:center; gap:8px; margin: 3px 0; font-size:11px;">
                         <span style="min-width:55px;">${label}</span>
-                        <div style="background:#444; height:10px; width:100%; border-radius:5px;"><div style="background:${barColor}; height:100%; width:${p}%;"></div></div>
+                        <div style="background:#444; height:10px; width:100%; border-radius:5px;"><div style="background:${val >= 80 ? '#28a745' : '#dc3545'}; height:100%; width:${p}%;"></div></div>
                         <span style="min-width:30px; text-align:right;">${p}%</span>
                     </div>`;
         };
@@ -249,10 +292,7 @@
             ${renderCardSimple(`Vitórias ${B}`, vB, total, '#28a745')}
             ${renderCardSimple('Empates', empates, total, '#ffc107')}
             ${renderCardSimple('Ambas', ambasMarcamCount, total, '#28a745')}
-            
             ${renderVipProgress('Ambas 1º Tempo', ambasMarcam1TCount, total, '#28a745')}
-
-            
             ${renderVipStat('Média Gols', (totalGols / total).toFixed(2))}
             ${renderVipStat('Média 1º Tempo', (totalGols1T / total).toFixed(2))}
             ${renderVipStat('Média Gols ' + A, (gA / total).toFixed(2))}
@@ -261,7 +301,6 @@
             ${renderVipStat('Sofridos ' + A, golsSofridosA)}
             ${renderVipStat('Gols Feitos ' + B, gB)}
             ${renderVipStat('Sofridos ' + B, golsSofridosB)}
-            
             <div class="card grid-columns" style="grid-column: 1 / -1;">
                 <div><h3>GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
                 <div><h3>GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
@@ -273,54 +312,21 @@
 
     function renderCardSimple(label, count, total, color) {
         const p = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
-        return `
-            <div class="card">
-                <div>${label}: <b>${count}</b></div>
-                <div style="font-weight:bold; text-align: center;">${p}%</div>
-                <div style="background:#444; height:6px; width:100%; border-radius:3px;">
-                    <div style="background:${color}; height:100%; width:${p}%; border-radius:3px;"></div>
-                </div>
-            </div>`;
+        return `<div class="card"><div>${label}: <b>${count}</b></div><div style="font-weight:bold; text-align: center;">${p}%</div><div style="background:#444; height:6px; width:100%; border-radius:3px;"><div style="background:${color}; height:100%; width:${p}%; border-radius:3px;"></div></div></div>`;
     }
 
     function renderVipStat(label, value) {
-        if (isVip) {
-            return `<div class="card">${label}: <b>${value}</b></div>`;
-        } else {
-            return `
-                <div class="card">
-                    <div style="margin-bottom:5px; font-size:12px;">${label}</div>
-                    <a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">
-                        🔒 APENAS VIP
-                    </a>
-                </div>`;
-        }
+        if (isVip) return `<div class="card">${label}: <b>${value}</b></div>`;
+        return `<div class="card"><div style="margin-bottom:5px; font-size:12px;">${label}</div><a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">🔒 APENAS VIP</a></div>`;
     }
 
     function renderVipProgress(label, count, total, color) {
         if (isVip) {
-            // Se for VIP, desenha a barra completa
             const p = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
-            return `
-            <div class="card">
-                <div>${label}: <b>${count}</b></div>
-                <div style="font-weight:bold; text-align: center;">${p}%</div>
-                <div style="background:#444; height:6px; width:100%; border-radius:3px;">
-                    <div style="background:${color}; height:100%; width:${p}%; border-radius:3px;"></div>
-                </div>
-            </div>`;
-        } else {
-            // Se não for VIP, mostra o bloqueio
-            return `
-                <div class="card">
-                    <div style="margin-bottom:5px; font-size:12px;">${label}</div>
-                    <a href="SEU_LINK_DE_PAGAMENTO" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">
-                        🔒 APENAS VIP
-                    </a>
-                </div>`;
+            return `<div class="card"><div>${label}: <b>${count}</b></div><div style="font-weight:bold; text-align: center;">${p}%</div><div style="background:#444; height:6px; width:100%; border-radius:3px;"><div style="background:${color}; height:100%; width:${p}%; border-radius:3px;"></div></div></div>`;
         }
+        return `<div class="card"><div style="margin-bottom:5px; font-size:12px;">${label}</div><a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">🔒 APENAS VIP</a></div>`;
     }
-
 </script>
 </body>
 </html>
