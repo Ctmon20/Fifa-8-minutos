@@ -106,18 +106,34 @@
 <script>
     const URL = "https://script.google.com/macros/s/AKfycbxUSrwwSQfzj2EodbPSRVjEo67-hcwGBiDMx2PZTsV61MPELNDzvUKusxLfzQg-FEXe-w/exec";
     let dadosGlobais = [];
+    let isCarregando = true; // Flag para saber se ainda estamos buscando dados
+    let loadingElement = null; // Referência ao aviso
 
+    // Inicia o fetch imediatamente em segundo plano
     fetch(URL)
         .then(r => r.json())
         .then(data => {
             dadosGlobais = data.confrontos;
             atualizarJogadores();
+            isCarregando = false;
+            
+            // Se o aviso existir, removemos ele agora que terminou
+            if (loadingElement) {
+                document.body.removeChild(loadingElement);
+                loadingElement = null;
+            }
+        })
+        .catch(err => {
+            isCarregando = false;
+            if (loadingElement) {
+                loadingElement.innerHTML = "❌ Erro ao conectar. Tente recarregar.";
+                setTimeout(() => { document.body.removeChild(loadingElement); loadingElement = null; }, 3000);
+            }
         });
 
     function atualizarJogadores() {
         const filtrados = dadosGlobais;
         const nomes = [...new Set([...filtrados.map(d => d.casa), ...filtrados.map(d => d.visit)])].sort();
-        // Atualização para preencher o datalist
         document.getElementById('listaJogadores').innerHTML = nomes.map(n => `<option value="${n}">`).join('');
     }
 
@@ -135,6 +151,20 @@
         const result = await db.call({ action: "login", username: user, password: pass });
         
         if (result && result.success) {
+            // Se os dados ainda estiverem carregando, mostramos o aviso aqui
+            if (isCarregando) {
+                loadingElement = document.createElement('div');
+                loadingElement.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; padding: 20px; border-radius: 15px; color: white; border: 2px solid #ff8c00; z-index: 10000; text-align: center; font-weight: bold;";
+                loadingElement.innerHTML = `
+                    <div style="margin-bottom: 10px;">🔄 Sincronizando jogos para análise...</div>
+                    <div style="font-size: 0.8em; color: #ccc; font-weight: normal;">
+                        Após a sincronização, os jogadores estarão disponíveis. <br>
+                        Comece a digitar o nome para filtrar automaticamente.
+                    </div>
+                `;
+                document.body.appendChild(loadingElement);
+            }
+
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
         } else {
@@ -153,7 +183,7 @@
         
         if (confrontos.length === 0) { document.getElementById('resultado').innerHTML = "Nenhum confronto encontrado."; return; }
 
-        let gA = 0, gB = 0, vA = 0, vB = 0, empates = 0, ambasMarcamCount = 0;
+        let gA = 0, gB = 0, vA = 0, vB = 0, empates = 0, ambasMarcamCount = 0, ambasMarcam1TCount = 0;
         let totalGols = 0, totalGols1T = 0;
         let golsSofridosA = 0, golsSofridosB = 0;
         let counts = { jogo: Array(8).fill(0), jogA: Array(8).fill(0), jogB: Array(8).fill(0), jogo1T: Array(8).fill(0) };
@@ -161,6 +191,12 @@
         confrontos.forEach(c => {
             let golsA = (c.casa === A) ? c.golsCasa : c.golsVisit;
             let golsB = (c.casa === A) ? c.golsVisit : c.golsCasa;
+            
+            // --- AJUSTE AQUI: Definindo as variáveis que faltavam ---
+            let golsA1T = (c.casa === A) ? (c.golsCasa1T || 0) : (c.golsVisit1T || 0);
+            let golsB1T = (c.casa === A) ? (c.golsVisit1T || 0) : (c.golsCasa1T || 0);
+            // --------------------------------------------------------
+
             golsSofridosA += (c.casa === A) ? c.golsVisit : c.golsCasa;
             golsSofridosB += (c.casa === B) ? c.golsVisit : c.golsCasa;
 
@@ -169,6 +205,7 @@
             
             if (golsA > golsB) vA++; else if (golsB > golsA) vB++; else empates++;
             if (golsA > 0 && golsB > 0) ambasMarcamCount++;
+            if (golsA1T > 0 && golsB1T > 0) ambasMarcam1TCount++; 
             
             for (let i = 0; i < 8; i++) {
                 if ((golsA + golsB) >= (i + 0.5)) counts.jogo[i]++;
@@ -201,6 +238,7 @@
             ${renderCardSimple(`Vitórias ${B}`, vB, total, '#28a745')}
             ${renderCardSimple('Empates', empates, total, '#ffc107')}
             ${renderCardSimple('Ambas', ambasMarcamCount, total, '#28a745')}
+            ${renderCardSimple('Ambas 1T', ambasMarcam1TCount, total, '#28a745')}
             <div class="card">Média Gols: <b>${(totalGols / total).toFixed(2)}</b></div>
             <div class="card">Média 1º Tempo: <b>${(totalGols1T / total).toFixed(2)}</b></div>
             <div class="card">Média Gols ${A}: <b>${(gA / total).toFixed(2)}</b></div>
