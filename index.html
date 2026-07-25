@@ -219,7 +219,7 @@
                 loadingElement = document.createElement('div');
                 loadingElement.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; padding: 20px; border-radius: 15px; color: white; border: 2px solid #ff8c00; z-index: 10000; text-align: center; font-weight: bold;";
                 loadingElement.innerHTML = `
-                    <div style="margin-bottom: 10px;">🔄 Sincronizando jogos para análise...</div>
+                    <div style="margin-bottom: 10px;">🔄 Sincronizando jogos para análise AGUARDE...</div>
                     <div style="font-size: 0.8em; color: #ccc; font-weight: normal;">
                         Após a sincronização, os jogadores estarão disponíveis. <br>
                         Comece a digitar o nome para filtrar automaticamente.
@@ -301,7 +301,7 @@
         
         if (isVip) {
             const val = parseFloat(sugestaoOver);
-            let mensagens = (val >= 3.0) ? [
+            let mensagens = (val >= 4.0) ? [
                 `Jogo extremamente movimentado e aberto. Sugestão: Over ${sugestaoOver} gols.`,
                 `Alta intensidade ofensiva detectada. Sugestão: Over ${sugestaoOver} gols.`,
                 `Partida com tendência de muitos gols. Sugestão: Over ${sugestaoOver} gols.`,
@@ -342,7 +342,7 @@
             ${renderVipStat('Média Gols ' + B, (gB / total).toFixed(2))}
             <div class="card grid-columns" style="grid-column: 1 / -1;">
                 <div><h3>OVER GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
-                <div><h3>OVERGOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
+                <div><h3>OVER GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
                 <div><h3>JOGADOR ${A}</h3>${counts.jogA.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
                 <div><h3>JOGADOR ${B}</h3>${counts.jogB.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
             </div>
