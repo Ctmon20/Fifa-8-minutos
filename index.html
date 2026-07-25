@@ -19,7 +19,17 @@
             --text-color: #e0e0e0;
             --sugestao-color: #ffeb3b;
         }
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: var(--bg-color); color: var(--text-color); transition: 0.3s; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            padding: 20px; 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
 
         .hidden { display: none !important; }
 
@@ -52,6 +62,16 @@
         .btn-vip { background: #0056b3; color: white; border-radius: 5px; text-align: center; cursor: pointer; font-weight: bold; border: none; display: block; margin: 2px 0; padding: 4px; font-size: 11px; text-decoration: none; }
         
         @media (max-width: 600px) { .controls { flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } }
+        
+        footer {
+            margin-top: auto;
+            text-align: center; 
+            padding: 20px; 
+            font-size: 13px; 
+            color: #888; 
+            border-top: 1px solid #333; 
+            background: var(--bg-color);
+        }
     </style>
 </head>
 <body>
@@ -94,6 +114,10 @@
             <option value="20">20</option>
             <option value="50">50</option>
             <option value="60">60</option>
+            <option value="70">60</option>
+            <option value="80">60</option>
+            <option value="90">60</option>
+            <option value="60">100</option>
         </select>
         <button onclick="analisar()">Analisar Confrontos</button>
         <span id="sugestao"></span>
@@ -101,6 +125,14 @@
 
     <div id="resultado" class="stats"></div>
 </div>
+
+<footer>
+    <p>&copy; 2026 Scanner 8 Minutos. Todos os direitos reservados.</p>
+    <p>
+        <a href="#" onclick="event.preventDefault(); abrirModalInfo('termos')" style="color: #ff8c00; text-decoration: none; margin: 0 10px;">Termos de Uso</a> | 
+        <a href="#" onclick="event.preventDefault(); abrirModalInfo('privacidade')" style="color: #ff8c00; text-decoration: none; margin: 0 10px;">Política de Privacidade</a>
+    </p>
+</footer>
 
 <div id="modal-msg" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div style="background: #1e1e1e; padding: 25px; border-radius: 15px; border: 2px solid #ff8c00; color: white; text-align: center; max-width: 300px; width: 90%;">
@@ -118,17 +150,27 @@
     let loadingElement = null;
     let isVip = false;
 
-    // Inicia o fetch imediatamente em segundo plano
+   // Função auxiliar para abrir o modal de termos e privacidade
+    function abrirModalInfo(tipo) {
+        const modalText = document.getElementById('modal-text');
+        if (tipo === 'termos') {
+            modalText.innerText = "Termos de Uso: Este sistema é uma ferramenta de análise de desempenho de jogadores de FIFA. NÃO somos indicação de investimento. Ao decidir realizar entradas em apostas esportivas, nunca entre às cegas; tome decisões baseadas em dados. É obrigatório ter 18 anos ou mais. Apostas esportivas envolvem riscos: jogue apenas o que você pode perder.";
+        } else {
+            modalText.innerText = "Política de Privacidade: Seus dados estão seguros e são usados apenas para validação de acesso. Não compartilhamos informações com terceiros. Lembre-se: este sistema não é um conselho financeiro. O uso é estritamente proibido para menores de 18 anos. Analise os dados com responsabilidade e jogue com consciência.";
+        }
+        document.getElementById('modal-msg').classList.remove('hidden');
+    }
+
+    // Início da carga dos dados
     fetch(URL)
         .then(r => r.json())
         .then(data => {
             dadosGlobais = data.confrontos;
             atualizarJogadores();
             isCarregando = false;
-            
-            if (loadingElement) {
-                document.body.removeChild(loadingElement);
-                loadingElement = null;
+            if (loadingElement) { 
+                document.body.removeChild(loadingElement); 
+                loadingElement = null; 
             }
         })
         .catch(err => {
@@ -210,10 +252,8 @@
         const A = document.getElementById('jogadorA').value;
         const B = document.getElementById('jogadorB').value;
         const limite = document.getElementById('limite').value;
-        
         let confrontos = dadosGlobais.filter(d => ((d.casa === A && d.visit === B) || (d.casa === B && d.visit === A)));
         if (limite !== "todos") confrontos = confrontos.slice(-parseInt(limite));
-        
         if (confrontos.length === 0) { document.getElementById('resultado').innerHTML = "Nenhum confronto encontrado."; return; }
 
         let gA = 0, gB = 0, vA = 0, vB = 0, empates = 0, ambasMarcamCount = 0, ambasMarcam1TCount = 0;
@@ -247,30 +287,20 @@
         
         if (isVip) {
             const val = parseFloat(sugestaoOver);
-            let mensagens = [];
-
-            if (val >= 3.0) {
-                // Jogo com muitos gols = Jogo muito movimentado/aberto
-                mensagens = [
-                    `Análise avançada: O histórico mostra um confronto extremamente aberto. Sugestão: Over ${sugestaoOver} gols.`,
-                    `Jogo de alta intensidade detectado! Ambos os jogadores buscam o gol constantemente. Sugestão: Over ${sugestaoOver} gols.`,
-                    `Projeção de jogo muito movimentado. O sistema aponta um placar dilatado com Over ${sugestaoOver} gols.`,
-                    `Fluxo ofensivo alto identificado. A tendência é de uma partida com muitos gols: Over ${sugestaoOver}.`,
-                    `Dados de alta rotatividade: Confronto propício para um jogo aberto com Over ${sugestaoOver} gols.`
-                ];
-            } else {
-                // Jogo com poucos gols = Jogo estudado/retrancado
-                mensagens = [
-                    `Análise estratégica: Confronto com características mais estudadas e retrancadas. Sugestão: Over ${sugestaoOver} gols.`,
-                    `Jogo de cautela detectado. O histórico indica uma partida mais contida. Sugestão: Over ${sugestaoOver} gols.`,
-                    `Projeção de um confronto tático e de baixo placar. Sugestão de mercado: Over ${sugestaoOver} gols.`,
-                    `Dados de eficiência baixa: O sistema aponta um jogo mais travado e defensivo com Over ${sugestaoOver}.`,
-                    `Padrão de jogo contido identificado. A tendência é de um confronto equilibrado e menos gols: Over ${sugestaoOver}.`
-                ];
-            }
-            
-            const msgAleatoria = mensagens[Math.floor(Math.random() * mensagens.length)];
-            document.getElementById('sugestao').innerHTML = msgAleatoria;
+            let mensagens = (val >= 3.0) ? [
+                `Jogo extremamente movimentado e aberto. Sugestão: Over ${sugestaoOver} gols.`,
+                `Alta intensidade ofensiva detectada. Sugestão: Over ${sugestaoOver} gols.`,
+                `Partida com tendência de muitos gols. Sugestão: Over ${sugestaoOver} gols.`,
+                `Fluxo ofensivo alto: O sistema indica um jogo aberto com Over ${sugestaoOver} gols.`,
+                `Confronto propício para um placar dilatado: Over ${sugestaoOver} gols.`
+            ] : [
+                `Jogo mais estudado e retrancado. Sugestão: Over ${sugestaoOver} gols.`,
+                `Confronto de muita cautela e defesas sólidas. Sugestão: Over ${sugestaoOver} gols.`,
+                `Partida tática com tendência a poucos gols. Sugestão: Over ${sugestaoOver} gols.`,
+                `Dados indicam um confronto mais travado e defensivo: Over ${sugestaoOver} gols.`,
+                `Ritmo de jogo contido identificado. Sugestão estratégica: Over ${sugestaoOver} gols.`
+            ];
+            document.getElementById('sugestao').innerText = mensagens[Math.floor(Math.random() * mensagens.length)];
         } else {
             document.getElementById('sugestao').innerHTML = '<a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px 10px; display: inline-block;">🔒 SUGESTÃO VIP</a>';
         }
@@ -278,11 +308,10 @@
         const renderBar = (count, total, label, i) => {
             if (i >= 2 && !isVip) return `<a href="pagamento.html" class="btn-vip" target="_blank">🔒 APENAS VIP</a>`;
             const val = total > 0 ? (count / total) * 100 : 0;
-            const p = val.toFixed(0);
             return `<div style="display:flex; align-items:center; gap:8px; margin: 3px 0; font-size:11px;">
                         <span style="min-width:55px;">${label}</span>
-                        <div style="background:#444; height:10px; width:100%; border-radius:5px;"><div style="background:${val >= 80 ? '#28a745' : '#dc3545'}; height:100%; width:${p}%;"></div></div>
-                        <span style="min-width:30px; text-align:right;">${p}%</span>
+                        <div style="background:#444; height:10px; width:100%; border-radius:5px;"><div style="background:${val >= 80 ? '#28a745' : '#dc3545'}; height:100%; width:${val.toFixed(0)}%;"></div></div>
+                        <span style="min-width:30px; text-align:right;">${val.toFixed(0)}%</span>
                     </div>`;
         };
 
@@ -297,13 +326,9 @@
             ${renderVipStat('Média 1º Tempo', (totalGols1T / total).toFixed(2))}
             ${renderVipStat('Média Gols ' + A, (gA / total).toFixed(2))}
             ${renderVipStat('Média Gols ' + B, (gB / total).toFixed(2))}
-            ${renderVipStat('Gols Feitos ' + A, gA)}
-            ${renderVipStat('Sofridos ' + A, golsSofridosA)}
-            ${renderVipStat('Gols Feitos ' + B, gB)}
-            ${renderVipStat('Sofridos ' + B, golsSofridosB)}
             <div class="card grid-columns" style="grid-column: 1 / -1;">
-                <div><h3>GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
-                <div><h3>GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
+                <div><h3>OVER GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
+                <div><h3>OVERGOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
                 <div><h3>JOGADOR ${A}</h3>${counts.jogA.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
                 <div><h3>JOGADOR ${B}</h3>${counts.jogB.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
             </div>
@@ -328,5 +353,6 @@
         return `<div class="card"><div style="margin-bottom:5px; font-size:12px;">${label}</div><a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">🔒 APENAS VIP</a></div>`;
     }
 </script>
+
 </body>
 </html>
