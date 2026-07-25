@@ -85,6 +85,8 @@
     <div style="text-align: left; margin: 5px 0;"><small>Lembrar-me</small></div>
     <button id="btn-login" onclick="fazerLogin()">Entrar</button>
     <p style="margin-top: 10px; font-size: 0.8em; margin-bottom: 0;">Ainda não tem uma conta? <a href="#" onclick="event.preventDefault(); document.getElementById('login-container').classList.add('hidden'); document.getElementById('cadastro-container').classList.remove('hidden');" style="color: #00bcd4;">Cadastre-se</a></p>
+    <!-- Link de Contato Adicionado -->
+    <p style="margin-top: 15px; font-size: 0.8em;">Suporte: <a href="https://t.me/SGEEstoqly" target="_blank" style="color: #00bcd4; text-decoration: none;">@SGEEstoqly</a></p>
 </div>
 
 <div id="cadastro-container" class="hidden">
@@ -98,9 +100,12 @@
 
 <div id="main-content" class="hidden">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Analisador de Confrontos</h2>
+    <h2>Analisador de Confrontos</h2>
+    <div> <!-- Container para os botões ficarem juntos -->
+        <button onclick="abrirModalInfo('sobre')" style="margin-right: 10px;">ℹ️ Sobre</button>
         <button onclick="document.body.classList.toggle('dark')">🌓 Alternar Tema</button>
     </div>
+</div>
 
     <div class="controls">
         <input list="listaJogadores" id="jogadorA" class="input-jogador" placeholder="Jogador A"> 
@@ -153,11 +158,17 @@
    // Função auxiliar para abrir o modal de termos e privacidade
     function abrirModalInfo(tipo) {
         const modalText = document.getElementById('modal-text');
+        
         if (tipo === 'termos') {
             modalText.innerText = "Termos de Uso: Este sistema é uma ferramenta de análise de desempenho de jogadores de FIFA. NÃO somos indicação de investimento. Ao decidir realizar entradas em apostas esportivas, nunca entre às cegas; tome decisões baseadas em dados. É obrigatório ter 18 anos ou mais. Apostas esportivas envolvem riscos: jogue apenas o que você pode perder.";
-        } else {
+        } 
+        else if (tipo === 'privacidade') {
             modalText.innerText = "Política de Privacidade: Seus dados estão seguros e são usados apenas para validação de acesso. Não compartilhamos informações com terceiros. Lembre-se: este sistema não é um conselho financeiro. O uso é estritamente proibido para menores de 18 anos. Analise os dados com responsabilidade e jogue com consciência.";
         }
+        else if (tipo === 'sobre') {
+            modalText.innerText = "Sobre o Scanner 8 Minutos:\n\nEste sistema processa estatísticas avançadas para análise de confrontos.\n\n• FIFA disponíveis: E-Soccer - Battle Volta - 6 Minutos, E-Soccer - Battle - 8 Minutos.\n• Atualização dos dados: Realizada automaticamente todos os dias às 10h.\n\nLembre-se: O uso consciente e baseado em dados é fundamental.";
+        }
+        
         document.getElementById('modal-msg').classList.remove('hidden');
     }
 
