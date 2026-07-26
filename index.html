@@ -116,7 +116,7 @@
     <img src="logo.png" alt="Logo Scanner 8 Minutos" style="width: 300px; margin-bottom: 5px;">
     <h2 style="margin-top: 5px;">Criar Conta</h2>
     <p style="font-size: 0.9em; color: #aaa;">Preencha para ter acesso</p>
-    <input type="text" id="cad-email" placeholder="Email ou usuário">
+    <input type="text" id="cad-email" placeholder="Email ou usuário" maxlength="60">
     <input type="password" id="cad-pass" placeholder="Senha (máx 8 dígitos)" maxlength="8">
     <button id="btn-cadastrar" onclick="cadastrarUsuario()">Criar Conta</button>
     <p style="margin-top: 10px; font-size: 0.8em;"><a href="#" onclick="event.preventDefault(); document.getElementById('cadastro-container').classList.add('hidden'); document.getElementById('login-container').classList.remove('hidden');" style="color: #00bcd4;">Voltar para o Login</a></p>
@@ -193,7 +193,7 @@
 
 <script>
     const SUPABASE_URL = 'https://afezbragrjyovmgwjmeq.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_FICkQvqGT4az5kAmUnpLww_oKlVLlqD';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZXpicmFncmp5b3ZtZ3dqbWVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTAzNDksImV4cCI6MjEwMDU2NjM0OX0.qIv5Fv99sjW5rTCw6MJGLMAPcgHPyevw9aYAc64Hdl4';
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let dadosGlobais = [];
@@ -251,26 +251,35 @@
         btnLogin.innerText = "VALIDANDO...";
         
         try {
-            const { data, error } = await db.rpc('realizar_login', { 
-                p_email: user, 
-                p_senha: pass 
+            // 1. Faz o login oficial (Cria a sessão no Supabase para ativar o RLS)
+            const { data: authData, error: authError } = await db.auth.signInWithPassword({
+                email: user,
+                password: pass
             });
             
-            if (error) throw error;
+            if (authError) throw authError;
 
-            if (data) {
-                isVip = (data.tipo && data.tipo.toLowerCase() === "assinante");
+            // 2. Busca o 'tipo' do usuário na tabela, já que o auth não traz colunas personalizadas
+            const { data: userData, error: userError } = await db
+                .from('usuarios')
+                .select('tipo')
+                .eq('email', user)
+                .single();
+
+            if (userError) throw userError;
+
+            // 3. Mantém sua lógica original intacta
+            if (userData) {
+                isVip = (userData.tipo && userData.tipo.toLowerCase() === "assinante");
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
 
                 atualizarStatusAssinatura(user);
-
-            } else {
-                showModal("Acesso negado: Usuário ou senha incorretos.");
             }
+
         } catch (err) {
             console.error(err);
-            showModal("Erro ao tentar realizar login.");
+            showModal("Erro ao tentar realizar login: " + err.message);
         }
         btnLogin.innerText = "Entrar";
     }
@@ -308,17 +317,27 @@
         const pass = document.getElementById('cad-pass').value;
 
         if (!user || !pass) { alert("Preencha todos os campos."); return; }
+        if (user.length > 60) { alert("O email deve ter no máximo 60 caracteres."); return; }
         if (pass.length > 8) { alert("A senha deve ter no máximo 8 dígitos."); return; }
 
         btn.innerText = "Cadastrando...";
         try {
-            const { error } = await db
+            // 1. Cadastra no sistema oficial do Supabase
+            const { data: authData, error: authError } = await db.auth.signUp({
+                email: user,
+                password: pass
+            });
+
+            if (authError) throw authError;
+
+            // 2. Salva o registro na sua tabela 'usuarios'
+            const { error: dbError } = await db
                 .from('usuarios')
                 .insert([{ email: user, senha: pass, tipo: 'gratis' }]);
+
+            if (dbError) throw dbError;
             
-            if (error) throw error;
-            
-            alert("Cadastro realizado com sucesso!");
+            alert("Cadastro realizado com sucesso! Agora você pode logar.");
             document.getElementById('cadastro-container').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
         } catch (err) { 
