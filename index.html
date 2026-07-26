@@ -6,75 +6,97 @@
     <title>Analisador de Confrontos</title>
     <!-- Adicionando a biblioteca do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-color: #fdfaf7;
-            --card-bg: #ffffff;
-            --text-color: #333;
-            --accent: #28a745;
-            --sugestao-color: #d32f2f;
-            --brand-color: #ff8c00;
-        }
-        body.dark {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --sugestao-color: #ffeb3b;
-        }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            padding: 20px; 
-            background: var(--bg-color); 
-            color: var(--text-color); 
-            transition: 0.3s;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
-        }
+<style>
+    :root {
+        --bg-color: #fdfaf7;
+        --card-bg: #ffffff;
+        --text-color: #333;
+        --accent: #28a745;
+        --sugestao-color: #d32f2f;
+        --brand-color: #ff8c00;
+    }
+    body.dark {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --sugestao-color: #ffeb3b;
+    }
+    body { 
+        font-family: 'Segoe UI', sans-serif; 
+        padding: 20px; 
+        background: var(--bg-color); 
+        color: var(--text-color); 
+        transition: 0.3s;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+    }
 
-        .hidden { display: none !important; }
+    .hidden { display: none !important; }
 
-        #login-container, #cadastro-container {
-            max-width: 400px; margin: 50px auto;
-            background: #1e1e1e; padding: 30px; border-radius: 20px;
-            color: white; text-align: center;
-            border: 2px solid var(--brand-color);
-        }
+    #login-container, #cadastro-container {
+        max-width: 400px; margin: 50px auto;
+        background: #1e1e1e; padding: 30px; border-radius: 20px;
+        color: white; text-align: center;
+        border: 2px solid var(--brand-color);
+    }
 
-        #login-container input, #cadastro-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; }
+    #login-container input, #cadastro-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; }
 
-        input { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; background: white; }
-        body.dark input { background: #2a2a2a; color: white; border: 1px solid #444; }
+    input { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; background: white; }
+    body.dark input { background: #2a2a2a; color: white; border: 1px solid #444; }
 
-        #btn-login, #btn-cadastrar {
-            width: 100%; padding: 12px; border-radius: 10px; border: none;
-            background: var(--brand-color); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
-        .controls { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    #btn-login, #btn-cadastrar {
+        width: 100%; padding: 12px; border-radius: 10px; border: none;
+        background: var(--brand-color); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px;
+    }
+    .controls { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-        .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
 
-        .card { background: var(--card-bg); padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
-        select, button { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
-        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
-        #sugestao { font-weight: bold; margin-left: 10px; font-size: 14px; color: var(--sugestao-color); }
-        .grid-columns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        
-        .btn-vip { background: #0056b3; color: white; border-radius: 5px; text-align: center; cursor: pointer; font-weight: bold; border: none; display: block; margin: 2px 0; padding: 4px; font-size: 11px; text-decoration: none; }
-        
-        @media (max-width: 600px) { .controls { flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } }
-        
-        footer {
-            margin-top: auto;
-            text-align: center; 
-            padding: 20px; 
-            font-size: 13px; 
-            color: #888; 
-            border-top: 1px solid #333; 
-            background: var(--bg-color);
-        }
-    </style>
+    .card { background: var(--card-bg); padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+    select, button { padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+    button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
+    #sugestao { font-weight: bold; margin-left: 10px; font-size: 14px; color: var(--sugestao-color); }
+    .grid-columns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    
+    .btn-vip { background: #0056b3; color: white; border-radius: 5px; text-align: center; cursor: pointer; font-weight: bold; border: none; display: block; margin: 2px 0; padding: 4px; font-size: 11px; text-decoration: none; }
+    
+    @media (max-width: 600px) { .controls { flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } }
+    
+    footer {
+        margin-top: auto;
+        text-align: center; 
+        padding: 20px; 
+        font-size: 13px; 
+        color: #888; 
+        border-top: 1px solid #333; 
+        background: var(--bg-color);
+    }
+
+    .header-container {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 15px; 
+        background: var(--card-bg); 
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .bola-historico {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .bola-vitoria { background-color: #28a745; }
+    .bola-derrota { background-color: #dc3545; }
+    .bola-empate { background-color: #6c757d; }
+    .bola-vazia { background-color: #333; border: 1px solid #555; }
+</style>
 </head>
 <body>
 
@@ -101,14 +123,35 @@
 </div>
 
 <div id="main-content" class="hidden">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Analisador de Confrontos</h2>
+    <div class="header-container">
+        <div style="display:flex; align-items:center; gap: 15px;">
+            <h2 style="margin: 0;">Analisador de Confrontos</h2>
+            <div id="status-assinatura" style="font-weight: bold; font-size: 0.9em;">
+                Carregando status...
+            </div>
+        </div>
+
+        <div id="historico-confronto" style="display:flex; align-items:center; gap: 25px; display: none;">
+            <div style="text-align: center;">
+                <div style="font-size: 0.8em; margin-bottom: 2px;" id="nome-jogadorA">Jogador A</div>
+                <img id="img-jogadorA" src="https://png.pngtree.com/png-vector/20250527/ourmid/pngtree-blue-security-shield-icon-png-image_16390521.png" style="width:30px; height:30px;">
+                <div id="bolinhas-A" style="display:flex; gap: 4px; margin-top: 5px; justify-content: center;"></div>
+            </div>
+
+            <div style="font-weight: bold; color: #888;">VS</div>
+
+            <div style="text-align: center;">
+                <div style="font-size: 0.8em; margin-bottom: 2px;" id="nome-jogadorB">Jogador B</div>
+                <img id="img-jogadorB" src="https://png.pngtree.com/png-vector/20250527/ourmid/pngtree-blue-security-shield-icon-png-image_16390521.png" style="width:30px; height:30px;">
+                <div id="bolinhas-B" style="display:flex; gap: 4px; margin-top: 5px; justify-content: center;"></div>
+            </div>
+        </div>
+        
         <div>
             <button onclick="abrirModalInfo('sobre')" style="margin-right: 10px;">ℹ️ Sobre</button>
             <button onclick="document.body.classList.toggle('dark')">🌓 Alternar Tema</button>
         </div>
     </div>
-
     <div class="controls">
         <input list="listaJogadores" id="jogadorA" class="input-jogador" placeholder="Jogador A"> 
         vs 
@@ -178,15 +221,20 @@
 
     carregarDados();
 
+   // Função auxiliar para abrir o modal de termos e privacidade
     function abrirModalInfo(tipo) {
         const modalText = document.getElementById('modal-text');
+        
         if (tipo === 'termos') {
-            modalText.innerText = "Termos de Uso: Este sistema é uma ferramenta de análise de desempenho. NÃO somos indicação de investimento. Ao decidir realizar entradas, tome decisões baseadas em dados. É obrigatório ter 18 anos ou mais.";
-        } else if (tipo === 'privacidade') {
-            modalText.innerText = "Política de Privacidade: Seus dados estão seguros e são usados apenas para validação de acesso. Não compartilhamos com terceiros.";
-        } else if (tipo === 'sobre') {
-            modalText.innerText = "Sobre o Scanner 8 Minutos:\n\nSistema de estatísticas avançadas para análise de confrontos. Atualização diária.";
+            modalText.innerText = "Termos de Uso: Este sistema é uma ferramenta de análise de desempenho de jogadores de FIFA. NÃO somos indicação de investimento. Ao decidir realizar entradas em apostas esportivas, nunca entre às cegas; tome decisões baseadas em dados. É obrigatório ter 18 anos ou mais. Apostas esportivas envolvem riscos: jogue apenas o que você pode perder.";
+        } 
+        else if (tipo === 'privacidade') {
+            modalText.innerText = "Política de Privacidade: Seus dados estão seguros e são usados apenas para validação de acesso. Não compartilhamos informações com terceiros. Lembre-se: este sistema não é um conselho financeiro. O uso é estritamente proibido para menores de 18 anos. Analise os dados com responsabilidade e jogue com consciência.";
         }
+        else if (tipo === 'sobre') {
+            modalText.innerText = "Sobre o Scanner 8 Minutos:\n\nEste sistema processa estatísticas avançadas para análise de confrontos.\n\n• FIFA disponíveis: E-Soccer - Battle Volta - 6 Minutos, E-Soccer - Battle - 8 Minutos.\n• Atualização dos dados: Realizada automaticamente todos os dias às 10h.\n\nLembre-se: O uso consciente e baseado em dados é fundamental.";
+        }
+        
         document.getElementById('modal-msg').classList.remove('hidden');
     }
 
@@ -226,6 +274,9 @@
                 isVip = (data.tipo && data.tipo.toLowerCase() === "assinante");
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
+
+                atualizarStatusAssinatura(user);
+
             } else {
                 showModal("Acesso negado: Usuário ou senha incorretos.");
             }
@@ -234,6 +285,35 @@
             showModal("Erro ao tentar realizar login.");
         }
         btnLogin.innerText = "Entrar";
+    }
+
+
+    async function atualizarStatusAssinatura(emailUsuario) {
+        const { data, error } = await db
+            .from('usuarios_com_status')
+            .select('dias_para_expirar')
+            .eq('email', emailUsuario)
+            .single();
+
+        if (data) {
+            const statusDiv = document.getElementById('status-assinatura');
+            const dias = data.dias_para_expirar;
+
+            // Nova verificação: Se dias for null, o plano é gratuito
+            if (dias === null) {
+                statusDiv.innerHTML = `💎 Plano Gratuito`;
+                statusDiv.style.color = "gray"; // Cor cinza para diferenciar
+            } else if (dias < 0) {
+                statusDiv.innerHTML = `⚠️ Vencido há ${Math.abs(dias)} dias`;
+                statusDiv.style.color = "red";
+            } else if (dias <= 3) {
+                statusDiv.innerHTML = `⏳ Expira em ${dias} dias!`;
+                statusDiv.style.color = "orange";
+            } else {
+                statusDiv.innerHTML = `✅ Plano ativo (${dias} dias)`;
+                statusDiv.style.color = "green";
+            }
+        }
     }
 
     async function cadastrarUsuario() {
@@ -318,6 +398,28 @@
         });
 
         const total = confrontos.length;
+
+            // --- AJUSTE VISUAL: Histórico de Bolinhas ---
+        document.getElementById('historico-confronto').style.display = 'flex';
+        document.getElementById('nome-jogadorA').innerText = A;
+        document.getElementById('nome-jogadorB').innerText = B;
+
+        const last5 = confrontos.slice(-5).reverse(); 
+        let formA = [];
+        let formB = [];
+
+        last5.forEach(c => {
+            let golsA = (c.Jogador_Casa === A) ? c.Gols_Casa : c.Gols_Visitante;
+            let golsB = (c.Jogador_Casa === A) ? c.Gols_Visitante : c.Gols_Casa;
+            if (golsA > golsB) { formA.push('V'); formB.push('D'); }
+            else if (golsB > golsA) { formA.push('D'); formB.push('V'); }
+            else { formA.push('E'); formB.push('E'); }
+        });
+
+        renderizarBolinhas('bolinhas-A', formA);
+        renderizarBolinhas('bolinhas-B', formB);
+        // -------------------------------------------
+
         const mediaGols = totalGols / total;
         let sugestaoOver = Math.max(0.5, mediaGols - 2).toFixed(1); 
         
@@ -388,6 +490,32 @@
         }
         return `<div class="card"><div style="margin-bottom:5px; font-size:12px;">${label}</div><a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">🔒 APENAS VIP</a></div>`;
     }
+
+
+    // Função para criar as bolinhas no HTML
+    function renderizarBolinhas(containerId, resultados) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; // Limpa as bolinhas anteriores
+
+        // Garante que temos 5 itens (mesmo que sejam vazios)
+        const ultimos5 = resultados.slice(0, 5); // Pega apenas os últimos 5
+        while(ultimos5.length < 5) {
+            ultimos5.push('vazio'); // Preenche com 'vazio' se houver menos de 5
+        }
+
+        ultimos5.forEach(res => {
+            const bola = document.createElement('div');
+            bola.classList.add('bola-historico');
+            
+            if (res === 'V') bola.classList.add('bola-vitoria');
+            else if (res === 'D') bola.classList.add('bola-derrota');
+            else if (res === 'E') bola.classList.add('bola-empate');
+            else bola.classList.add('bola-vazia');
+
+            container.appendChild(bola);
+        });
+    }
+
 </script>
 </body>
 </html>
