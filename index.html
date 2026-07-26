@@ -341,14 +341,13 @@
         btn.innerText = "Criar Conta";
     }
 
-    async function analisar() {
+async function analisar() {
         const A = document.getElementById('jogadorA').value.trim();
         const B = document.getElementById('jogadorB').value.trim();
         const limite = document.getElementById('limite').value;
         
         document.getElementById('resultado').innerHTML = "Carregando dados...";
         
-        // Corrigido para utilizar Jogador_Visitante
         const { data: confrontosBanco, error } = await db
             .from('confrontos')
             .select('*')
@@ -369,20 +368,40 @@
             return; 
         }
 
+        // Variáveis para os cálculos
         let gA = 0, gB = 0, vA = 0, vB = 0, empates = 0, ambasMarcamCount = 0, ambasMarcam1TCount = 0;
         let totalGols = 0, totalGols1T = 0;
+        
+        // Novas variáveis para os cards
+        let golsSofridosA = 0, golsSofridosB = 0;
+        
         let counts = { jogo: Array(8).fill(0), jogA: Array(8).fill(0), jogB: Array(8).fill(0), jogo1T: Array(8).fill(0) };
 
         confrontos.forEach(c => {
-            let golsA = (c.Jogador_Casa === A) ? c.Gols_Casa : c.Gols_Visitante;
-            let golsB = (c.Jogador_Casa === A) ? c.Gols_Visitante : c.Gols_Casa;
+            // Define quem é casa e quem é visitante nesta linha
+            const ehCasa = (c.Jogador_Casa === A);
             
-            let golsA1T = (c.Jogador_Casa === A) ? (c.Gols_Casa_1T || 0) : (c.Gols_Visitante_1T || 0);
-            let golsB1T = (c.Jogador_Casa === A) ? (c.Gols_Visitante_1T || 0) : (c.Gols_Casa_1T || 0);
+            // Gols Feitos
+            let golsA = ehCasa ? c.Gols_Casa : c.Gols_Visitante;
+            let golsB = ehCasa ? c.Gols_Visitante : c.Gols_Casa;
             
+            // Gols Sofridos (O inverso dos gols feitos)
+            let sofridosA = ehCasa ? c.Gols_Visitante : c.Gols_Casa;
+            let sofridosB = ehCasa ? c.Gols_Casa : c.Gols_Visitante;
+            
+            // Gols 1T
+            let golsA1T = ehCasa ? (c.Gols_Casa_1T || 0) : (c.Gols_Visitante_1T || 0);
+            let golsB1T = ehCasa ? (c.Gols_Visitante_1T || 0) : (c.Gols_Casa_1T || 0);
             let gols1T = (c.Gols_Casa_1T || 0) + (c.Gols_Visitante_1T || 0);
             
-            gA += golsA; gB += golsB; totalGols += (golsA + golsB); totalGols1T += gols1T;
+            // Acumuladores
+            gA += golsA; 
+            gB += golsB; 
+            golsSofridosA += sofridosA;
+            golsSofridosB += sofridosB;
+            
+            totalGols += (golsA + golsB); 
+            totalGols1T += gols1T;
             
             if (golsA > golsB) vA++; else if (golsB > golsA) vB++; else empates++;
             
@@ -464,6 +483,10 @@
             ${renderVipStat('Média 1º Tempo', (totalGols1T / total).toFixed(2))}
             ${renderVipStat('Média Gols ' + A, (gA / total).toFixed(2))}
             ${renderVipStat('Média Gols ' + B, (gB / total).toFixed(2))}
+            ${renderVipStat('Gols Feitos ' + A, gA)}
+            ${renderVipStat('Sofridos ' + A, golsSofridosA)}
+            ${renderVipStat('Gols Feitos ' + B, gB)}
+            ${renderVipStat('Sofridos ' + B, golsSofridosB)}
             <div class="card grid-columns" style="grid-column: 1 / -1;">
                 <div><h3>OVER GOLS NO 1º TEMPO</h3>${counts.jogo1T.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
                 <div><h3>OVER GOLS NO JOGO</h3>${counts.jogo.map((c, i) => renderBar(c, total, (i+0.5)+' Gols', i)).join('')}</div>
