@@ -203,7 +203,6 @@
 
     async function carregarDados() {
         try {
-            // Agora ela busca direto da View que você criou
             const { data, error } = await db
                 .from('lista_jogadores')
                 .select('nome');
@@ -221,7 +220,6 @@
 
     carregarDados();
 
-   // Função auxiliar para abrir o modal de termos e privacidade
     function abrirModalInfo(tipo) {
         const modalText = document.getElementById('modal-text');
         
@@ -236,16 +234,6 @@
         }
         
         document.getElementById('modal-msg').classList.remove('hidden');
-    }
-
-    function atualizarJogadores() {
-        const filtrados = dadosGlobais;
-        const nomes = [...new Set([
-            ...filtrados.map(d => d.Jogador_Casa), 
-            ...filtrados.map(d => d.Jogador_Visitante) // Corrigido para Jogador_Visitante
-        ])].filter(n => n).sort();
-        
-        document.getElementById('listaJogadores').innerHTML = nomes.map(n => `<option value="${n}">`).join('');
     }
 
     function showModal(mensagem) {
@@ -287,7 +275,6 @@
         btnLogin.innerText = "Entrar";
     }
 
-
     async function atualizarStatusAssinatura(emailUsuario) {
         const { data, error } = await db
             .from('usuarios_com_status')
@@ -299,10 +286,9 @@
             const statusDiv = document.getElementById('status-assinatura');
             const dias = data.dias_para_expirar;
 
-            // Nova verificação: Se dias for null, o plano é gratuito
             if (dias === null) {
                 statusDiv.innerHTML = `💎 Plano Gratuito`;
-                statusDiv.style.color = "gray"; // Cor cinza para diferenciar
+                statusDiv.style.color = "gray"; 
             } else if (dias < 0) {
                 statusDiv.innerHTML = `⚠️ Vencido há ${Math.abs(dias)} dias`;
                 statusDiv.style.color = "red";
@@ -341,7 +327,7 @@
         btn.innerText = "Criar Conta";
     }
 
-async function analisar() {
+    async function analisar() {
         const A = document.getElementById('jogadorA').value.trim();
         const B = document.getElementById('jogadorB').value.trim();
         const limite = document.getElementById('limite').value;
@@ -368,43 +354,29 @@ async function analisar() {
             return; 
         }
 
-        // Variáveis para os cálculos
         let gA = 0, gB = 0, vA = 0, vB = 0, empates = 0, ambasMarcamCount = 0, ambasMarcam1TCount = 0;
         let totalGols = 0, totalGols1T = 0;
-        
-        // Novas variáveis para os cards
         let golsSofridosA = 0, golsSofridosB = 0;
-        
         let counts = { jogo: Array(8).fill(0), jogA: Array(8).fill(0), jogB: Array(8).fill(0), jogo1T: Array(8).fill(0) };
 
         confrontos.forEach(c => {
-            // Define quem é casa e quem é visitante nesta linha
             const ehCasa = (c.Jogador_Casa === A);
-            
-            // Gols Feitos
-            let golsA = ehCasa ? c.Gols_Casa : c.Gols_Visitante;
-            let golsB = ehCasa ? c.Gols_Visitante : c.Gols_Casa;
-            
-            // Gols Sofridos (O inverso dos gols feitos)
-            let sofridosA = ehCasa ? c.Gols_Visitante : c.Gols_Casa;
-            let sofridosB = ehCasa ? c.Gols_Casa : c.Gols_Visitante;
-            
-            // Gols 1T
+            let golsA = (ehCasa ? (c.Gols_Casa || 0) : (c.Gols_Visitante || 0));
+            let golsB = (ehCasa ? (c.Gols_Visitante || 0) : (c.Gols_Casa || 0));
+            let sofridosA = (ehCasa ? (c.Gols_Visitante || 0) : (c.Gols_Casa || 0));
+            let sofridosB = (ehCasa ? (c.Gols_Casa || 0) : (c.Gols_Visitante || 0));
             let golsA1T = ehCasa ? (c.Gols_Casa_1T || 0) : (c.Gols_Visitante_1T || 0);
             let golsB1T = ehCasa ? (c.Gols_Visitante_1T || 0) : (c.Gols_Casa_1T || 0);
             let gols1T = (c.Gols_Casa_1T || 0) + (c.Gols_Visitante_1T || 0);
             
-            // Acumuladores
             gA += golsA; 
             gB += golsB; 
             golsSofridosA += sofridosA;
             golsSofridosB += sofridosB;
-            
             totalGols += (golsA + golsB); 
             totalGols1T += gols1T;
             
             if (golsA > golsB) vA++; else if (golsB > golsA) vB++; else empates++;
-            
             if (golsA > 0 && golsB > 0) ambasMarcamCount++;
             if (golsA1T > 0 && golsB1T > 0) ambasMarcam1TCount++; 
             
@@ -417,8 +389,6 @@ async function analisar() {
         });
 
         const total = confrontos.length;
-
-            // --- AJUSTE VISUAL: Histórico de Bolinhas ---
         document.getElementById('historico-confronto').style.display = 'flex';
         document.getElementById('nome-jogadorA').innerText = A;
         document.getElementById('nome-jogadorB').innerText = B;
@@ -426,7 +396,6 @@ async function analisar() {
         const last5 = confrontos.slice(-5).reverse(); 
         let formA = [];
         let formB = [];
-
         last5.forEach(c => {
             let golsA = (c.Jogador_Casa === A) ? c.Gols_Casa : c.Gols_Visitante;
             let golsB = (c.Jogador_Casa === A) ? c.Gols_Visitante : c.Gols_Casa;
@@ -437,7 +406,6 @@ async function analisar() {
 
         renderizarBolinhas('bolinhas-A', formA);
         renderizarBolinhas('bolinhas-B', formB);
-        // -------------------------------------------
 
         const mediaGols = totalGols / total;
         let sugestaoOver = Math.max(0.5, mediaGols - 2).toFixed(1); 
@@ -445,17 +413,17 @@ async function analisar() {
         if (isVip) {
             const val = parseFloat(sugestaoOver);
             let mensagens = (val >= 4.0) ? [
-                `Jogo extremamente movimentado e aberto. Sugestão: Over ${sugestaoOver} gols.`,
+                `Jogo extremamente movimentado. Sugestão: Over ${sugestaoOver} gols.`,
                 `Alta intensidade ofensiva detectada. Sugestão: Over ${sugestaoOver} gols.`,
                 `Partida com tendência de muitos gols. Sugestão: Over ${sugestaoOver} gols.`,
-                `Fluxo ofensivo alto: O sistema indica um jogo aberto com Over ${sugestaoOver} gols.`,
+                `Fluxo ofensivo alto: Sugestão: Over ${sugestaoOver} gols.`,
                 `Confronto propício para um placar dilatado: Over ${sugestaoOver} gols.`
             ] : [
-                `Jogo mais estudado e retrancado. Sugestão: Over ${sugestaoOver} gols.`,
-                `Confronto de muita cautela e defesas sólidas. Sugestão: Over ${sugestaoOver} gols.`,
-                `Partida tática com tendência a poucos gols. Sugestão: Over ${sugestaoOver} gols.`,
-                `Dados indicam um confronto mais travado e defensivo: Over ${sugestaoOver} gols.`,
-                `Ritmo de jogo contido identificado. Sugestão estratégica: Over ${sugestaoOver} gols.`
+                `Jogo mais estudado. Sugestão: Over ${sugestaoOver} gols.`,
+                `Confronto de cautela e defesas sólidas. Sugestão: Over ${sugestaoOver} gols.`,
+                `Partida tática: Sugestão: Over ${sugestaoOver} gols.`,
+                `Dados indicam um confronto mais travado: Over ${sugestaoOver} gols.`,
+                `Ritmo de jogo contido identificado. Sugestão: Over ${sugestaoOver} gols.`
             ];
             document.getElementById('sugestao').innerText = mensagens[Math.floor(Math.random() * mensagens.length)];
         } else {
@@ -463,8 +431,16 @@ async function analisar() {
         }
 
         const renderBar = (count, total, label, i) => {
-            if (i >= 2 && !isVip) return `<a href="pagamento.html" class="btn-vip" target="_blank">🔒 APENAS VIP</a>`;
             const val = total > 0 ? (count / total) * 100 : 0;
+            
+            // Define se a linha é 0.5 ou 1.5
+            const ehLinhaLiberada = (label.includes("0.5"));
+
+            // Permite visualização se for VIP OU se for uma das linhas liberadas
+            if (!isVip && !ehLinhaLiberada) { 
+                return `<div class="card"><div style="margin-bottom:5px; font-size:12px;">${label}</div><a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">🔒 APENAS VIP</a></div>`;
+            }
+            
             return `<div style="display:flex; align-items:center; gap:8px; margin: 3px 0; font-size:11px;">
                         <span style="min-width:55px;">${label}</span>
                         <div style="background:#444; height:10px; width:100%; border-radius:5px;"><div style="background:${val >= 80 ? '#28a745' : '#dc3545'}; height:100%; width:${val.toFixed(0)}%;"></div></div>
@@ -514,31 +490,24 @@ async function analisar() {
         return `<div class="card"><div style="margin-bottom:5px; font-size:12px;">${label}</div><a href="pagamento.html" class="btn-vip" target="_blank" style="padding: 5px; font-size: 11px;">🔒 APENAS VIP</a></div>`;
     }
 
-
-    // Função para criar as bolinhas no HTML
     function renderizarBolinhas(containerId, resultados) {
         const container = document.getElementById(containerId);
-        container.innerHTML = ''; // Limpa as bolinhas anteriores
-
-        // Garante que temos 5 itens (mesmo que sejam vazios)
-        const ultimos5 = resultados.slice(0, 5); // Pega apenas os últimos 5
+        container.innerHTML = ''; 
+        const ultimos5 = resultados.slice(0, 5); 
         while(ultimos5.length < 5) {
-            ultimos5.push('vazio'); // Preenche com 'vazio' se houver menos de 5
+            ultimos5.push('vazio'); 
         }
 
         ultimos5.forEach(res => {
             const bola = document.createElement('div');
             bola.classList.add('bola-historico');
-            
             if (res === 'V') bola.classList.add('bola-vitoria');
             else if (res === 'D') bola.classList.add('bola-derrota');
             else if (res === 'E') bola.classList.add('bola-empate');
             else bola.classList.add('bola-vazia');
-
             container.appendChild(bola);
         });
     }
-
 </script>
 </body>
 </html>
